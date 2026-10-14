@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Каталог приложений</title>
+<style>
+    /* Строгий монохромный минималистичный дизайн */
+    * {
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        padding: 20px;
+        background-color: #121212;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 400px;
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        margin: 0 0 20px 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 15px;
+        margin-top: 10px;
+        border-radius: 12px;
+        border: 1px solid #444;
+        background: #2a2a2a;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn:hover { background: #333; }
+    
+    .btn-install {
+        background: #ffffff;
+        color: #000000;
+        font-weight: bold;
+        justify-content: center;
+    }
+
+    .btn-install:hover { background: #e0e0e0; }
+
+    /* Окно выбора приложения */
+    .sheet-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: flex-end;
+        z-index: 100;
+    }
+
+    .sheet-overlay.active { display: flex; }
+
+    .sheet-modal {
+        width: 100%;
+        max-width: 400px;
+        height: 70vh;
+        background: #1e1e1e;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #333;
+        border-bottom: none;
+    }
+
+    .sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .sheet-header h3 { margin: 0; font-size: 18px; }
+
+    .close-btn {
+        background: transparent;
+        border: 1px solid #555;
+        color: #fff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 15px;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 15px;
+        margin-bottom: 15px;
+        outline: none;
+    }
+
+    .search-input::placeholder { color: #888; }
+
+    .sheet-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sheet-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    .sheet-item:hover { background: #333; }
+
+    .app-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 15px;
+        background: #444;
+    }
+
+    .app-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .app-name {
+        font-size: 16px;
+        font-weight: 500;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Установка приложения</h2>
+    
+    <button type="button" class="btn" onclick="openSheet()">
+        <span id="selectedAppText">Нажмите для выбора...</span>
+        <span>›</span>
+    </button>
+    
+    <button type="button" class="btn btn-install" onclick="startInstallation()">
+        Установить
+    </button>
+</div>
+
+<!-- Модальное окно со списком и поиском -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()">
+    <div class="sheet-modal" onclick="event.stopPropagation()">
+        
+        <div class="sheet-header">
+            <h3>Выбор приложения</h3>
+            <button type="button" class="close-btn" onclick="closeSheet()">✕</button>
+        </div>
+
+        <input type="text" id="appSearchInput" class="search-input" placeholder="Поиск по названию..." oninput="filterApps()" autocomplete="off">
+
+        <div class="sheet-list">
+            <!-- ВКонтакте -->
+            <div class="sheet-item" onclick="selectApp('itms-services://?action=download-manifest&url=https://НИК ГИТХАБ.github.ioНАЗВАНИЕ РЕПОЗИТОРИЯ/НАЗВАНИЕ ПЛИСТА', 'НАЗВАНИЕ ПРИЛОЖЕНИЯ')">
+                <div class="app-icon">
+                    <img src="ССЫЛКА НА ИКОНКУ" alt="ВК">
+                </div>
+                <span class="app-name">НАЗВАНИЕ ПРИЛОЖЕНИЯ</span>
+            </div>
+            
+            <!-- Сюда можно добавлять другие приложения по аналогии -->
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let selectedAppUrl = "";
+
+    // Открытие окна
+    function openSheet() {
+        document.getElementById("sheetOverlay").classList.add("active");
+        document.getElementById("appSearchInput").value = "";
+        filterApps(); // Сброс поиска при открытии
+    }
+
+    // Закрытие окна
+    function closeSheet() {
+        document.getElementById("sheetOverlay").classList.remove("active");
+    }
+
+    // Выбор приложения
+    function selectApp(url, name) {
+        selectedAppUrl = url;
+        document.getElementById("selectedAppText").textContent = name;
+        closeSheet();
+    }
+
+    // Логика поиска
+    function filterApps() {
+        const query = document.getElementById("appSearchInput").value.toLowerCase();
+        const items = document.querySelectorAll(".sheet-item");
+
+        items.forEach(item => {
+            const appName = item.querySelector(".app-name").textContent.toLowerCase();
+            if (appName.includes(query)) {
+                item.style.display = "flex";
+            } else {
+                item.style.display = "none";
+            }
+        });
+    }
+
+    // Запуск установки
+    function startInstallation() {
+        if (!selectedAppUrl) {
+            alert("Пожалуйста, сначала выберите приложение из списка.");
+            return;
+        }
+        window.location.href = selectedAppUrl;
+    }
+</script>
+
+</body>
+</html>
